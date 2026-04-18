@@ -6,3 +6,4 @@ dist
 apps/party/.env
 *.tsbuildinfo
 .turbo
+.claude/
