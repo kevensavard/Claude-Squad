@@ -26,5 +26,5 @@ export type ClientMessage =
   | { type: 'add_decision'; summary: string; decidedBy: string }
   | { type: 'update_tokens'; userId: string; tokensIn: number; tokensOut: number }
   | { type: 'dispatch_tasks'; tasks: Task[] }
-  | { type: 'session_close' }
   | { type: 'broadcast_agent_message'; agentId: string; content: string; mode: AgentMode }
+  | { type: 'session_close' }
