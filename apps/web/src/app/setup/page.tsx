@@ -1,7 +1,6 @@
 import { SupabaseStep } from './components/steps/SupabaseStep'
 import { MigrationsStep } from './components/steps/MigrationsStep'
 import { GithubStep } from './components/steps/GithubStep'
-import { AnthropicStep } from './components/steps/AnthropicStep'
 import { PartykitStep } from './components/steps/PartykitStep'
 
 export const metadata = { title: 'Setup — Squad' }
@@ -18,7 +17,6 @@ export default function SetupPage() {
         <SupabaseStep />
         <MigrationsStep />
         <GithubStep />
-        <AnthropicStep />
         <PartykitStep />
       </div>
       <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
