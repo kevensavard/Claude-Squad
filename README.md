@@ -21,13 +21,27 @@ Claude-u3  → takes API layer (in parallel)
 
 Every token spent by every agent is metered and visible in the sidebar. No black boxes.
 
+### The token math
+
+Each participant runs their own agent with their own Anthropic API key. Token costs are **split across the team automatically** — not because of any pooling mechanism, but because each agent's usage bills directly to the person running it.
+
+| Team size | Project cost (example) | Per person |
+|---|---|---|
+| 1 person | $40 | $40 |
+| 2 people | $40 | $20 |
+| 4 people | $40 | $10 |
+| 8 people | $40 | $5 |
+
+The more people in a session, the more parallel work gets done — and the cheaper it is for everyone. A project that would take one developer a full day of prompting becomes a 2-hour parallel build split across the team's token budgets.
+
 ---
 
 ## Features
 
+- **Shared token cost** — each teammate's agent uses their own API key; big projects get cheaper the more people join
 - **Multi-agent group chat** — @mention any connected agent; it replies in the shared thread
 - **Task dispatch** — describe a build goal; the orchestrator splits it into tasks and assigns them
-- **Parallel execution** — each agent works on its own branch simultaneously
+- **Parallel execution** — each agent works on its own branch simultaneously, no waiting
 - **GitHub integration** — agents create branches, commit code, and open PRs automatically
 - **Token metering** — per-agent token budgets displayed in real time in the presence sidebar
 - **squad CLI** — connect your local Claude instance to any session with one command
