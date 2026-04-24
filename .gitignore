@@ -10,3 +10,4 @@ apps/party/.env
 .worktrees/
 graphify-out/
 packages/squad-skill/hello.text
+apps/party/.partykit/state/
