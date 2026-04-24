@@ -1,4 +1,4 @@
-import type { AgentRecord, Task, OwnershipMap, ApiContract, BuildSummary, SessionState } from './sss.js'
+import type { AgentRecord, Task, OwnershipMap, ApiContract, BuildSummary, SessionState, AgentRole } from './sss.js'
 
 export type AgentMode = 'brainstorm' | 'review' | 'plan' | 'build'
 
@@ -15,7 +15,7 @@ export type ServerMessage =
   | { type: 'heartbeat_lost'; agentId: string }
 
 export type ClientMessage =
-  | { type: 'register_agent'; agentId: string; userId: string; displayName: string }
+  | { type: 'register_agent'; agentId: string; userId: string; displayName: string; role?: AgentRole }
   | { type: 'heartbeat'; agentId: string }
   | { type: 'update_spec'; spec: string }
   | { type: 'update_status'; agentId: string; status: AgentRecord['status'] }
@@ -27,4 +27,5 @@ export type ClientMessage =
   | { type: 'update_tokens'; userId: string; tokensIn: number; tokensOut: number }
   | { type: 'dispatch_tasks'; tasks: Task[] }
   | { type: 'broadcast_agent_message'; agentId: string; content: string; mode: AgentMode }
+  | { type: 'orchestrator_dispatch'; taskGraph: Task[] }
   | { type: 'session_close' }

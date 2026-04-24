@@ -25,6 +25,8 @@ export interface SessionState {
   createdAt: string
 }
 
+export type AgentRole = 'orchestrator' | 'agent'
+
 export interface AgentRecord {
   agentId: string
   userId: string
@@ -33,6 +35,7 @@ export interface AgentRecord {
   currentTaskId: string | null
   lastHeartbeat: number
   tokensUsed: number
+  role?: AgentRole
 }
 
 export type AgentRegistry = Record<string, AgentRecord>
@@ -89,3 +92,9 @@ export interface ContextInjection {
   estimatedTokens: number
   assembledAt: string
 }
+
+export type WatchEvent =
+  | { type: 'mention'; from: string; content: string; requestId: string }
+  | { type: 'build_goal'; from: string; content: string }
+  | { type: 'approval_needed'; proposalId: string; agentId: string; summary: string }
+  | { type: 'idle' }
