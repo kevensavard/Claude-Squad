@@ -1,81 +1,123 @@
 import WebSocket from 'ws'
 import Anthropic from '@anthropic-ai/sdk'
+import { runAgent } from '@squad/agent-runner'
+import type { Task } from '@squad/types'
+import { formatError } from './errors.js'
+import { runGuidedMode, printNonInteractiveHint } from './prompt.js'
 
 interface ConnectOptions {
   sessionId: string
   agentId: string
   apiKey: string
   partyUrl: string
+  workdir?: string
+  githubToken?: string
 }
 
-interface RouteMessage {
-  type: 'route_to_agent'
-  agentId: string
-  content: string
-  mode: string
-  requestId: string
-}
-
-interface RegisterMessage {
-  type: 'agent_register'
-  agentId: string
-  source: 'local'
-}
+type IncomingMessage =
+  | { type: 'route_to_agent'; agentId: string; content: string; mode: string; requestId: string }
+  | { type: 'build_started'; taskGraph: Task[] }
+  | { type: string }
 
 export async function connectToSession(opts: ConnectOptions): Promise<void> {
-  const { sessionId, agentId, apiKey, partyUrl } = opts
+  const { sessionId, agentId, apiKey, partyUrl, workdir = process.cwd(), githubToken } = opts
   const anthropic = new Anthropic({ apiKey })
 
+  const partyHost = partyUrl.replace(/^wss?:\/\//, '').replace(/^https?:\/\//, '')
   const wsUrl = `${partyUrl}/parties/main/${sessionId}`
   console.log(`Connecting to ${wsUrl} as ${agentId}…`)
 
   const ws = new WebSocket(wsUrl)
 
   ws.on('open', () => {
-    const register: RegisterMessage = { type: 'agent_register', agentId, source: 'local' }
-    ws.send(JSON.stringify(register))
+    ws.send(JSON.stringify({
+      type: 'register_agent',
+      agentId,
+      userId: agentId,
+      displayName: `Claude (local)`,
+    }))
     console.log(`Connected. Listening for messages as ${agentId}`)
   })
 
   ws.on('message', async (raw) => {
-    let msg: RouteMessage
+    let msg: IncomingMessage
     try {
-      msg = JSON.parse(raw.toString()) as RouteMessage
+      msg = JSON.parse(raw.toString()) as IncomingMessage
     } catch {
       return
     }
 
-    if (msg.type !== 'route_to_agent' || msg.agentId !== agentId) return
+    if (msg.type === 'agent_not_found') {
+      const m = msg as { type: string; available?: string[] }
+      console.error(formatError('agent_not_found', { agentId, available: m.available ?? [] }))
+      process.exit(1)
+    }
 
-    console.log(`[${agentId}] received ${msg.mode} request: "${msg.content.slice(0, 60)}…"`)
+    if (msg.type === 'build_started') {
+      const myTasks = (msg as { type: 'build_started'; taskGraph: Task[] }).taskGraph
+        .filter((t: Task) => t.assignedAgentId === agentId)
+
+      if (myTasks.length === 0) {
+        console.log(`[${agentId}] build_started — no tasks assigned to me`)
+        return
+      }
+      console.log(`[${agentId}] build_started — ${myTasks.length} task(s) assigned`)
+
+      for (const task of myTasks) {
+        console.log(`[${agentId}] Starting: ${task.title}`)
+        try {
+          await runAgent({
+            agentId,
+            userId: agentId,
+            sessionId,
+            task,
+            partyHost,
+            anthropicApiKey: apiKey,
+            githubToken,
+            workdir,
+          })
+          console.log(`[${agentId}] Done: ${task.title}`)
+        } catch (err) {
+          console.error(`[${agentId}] Task failed: ${task.title}`, err)
+        }
+      }
+      return
+    }
+
+    if (msg.type !== 'route_to_agent') return
+    const routeMsg = msg as { type: 'route_to_agent'; agentId: string; content: string; mode: string; requestId: string }
+    if (routeMsg.agentId !== agentId) return
+
+    console.log(`[${agentId}] received ${routeMsg.mode} request: "${routeMsg.content.slice(0, 60)}…"`)
 
     try {
       const response = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: msg.mode === 'status' ? 300 : 600,
+        max_tokens: routeMsg.mode === 'status' ? 300 : 600,
         system: `You are ${agentId}, a collaborative AI agent in a Squad coding session. Be concise.`,
-        messages: [{ role: 'user', content: msg.content }],
+        messages: [{ role: 'user', content: routeMsg.content }],
       })
-
       const text = response.content[0].type === 'text' ? response.content[0].text : ''
-
       ws.send(JSON.stringify({
         type: 'agent_response',
         agentId,
         content: text,
-        mode: msg.mode,
-        requestId: msg.requestId,
+        mode: routeMsg.mode,
+        requestId: routeMsg.requestId,
         tokensIn: response.usage.input_tokens,
         tokensOut: response.usage.output_tokens,
       }))
-
-      console.log(`[${agentId}] responded (${response.usage.output_tokens} tokens out)`)
     } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Unknown error'
+      if (errMsg.includes('401') || errMsg.toLowerCase().includes('unauthorized')) {
+        console.error(formatError('bad_api_key', {}))
+        process.exit(1)
+      }
       ws.send(JSON.stringify({
         type: 'agent_error',
         agentId,
-        error: err instanceof Error ? err.message : 'Unknown error',
-        requestId: msg.requestId,
+        error: errMsg,
+        requestId: routeMsg.requestId,
       }))
     }
   })
@@ -86,16 +128,51 @@ export async function connectToSession(opts: ConnectOptions): Promise<void> {
   })
 
   ws.on('error', (err) => {
-    console.error('WebSocket error:', err.message)
+    if (err.message.includes('ECONNREFUSED') || err.message.includes('ENOTFOUND')) {
+      console.error(formatError('ws_refused', { host: partyHost }))
+    } else {
+      console.error('WebSocket error:', err.message)
+    }
     process.exit(1)
   })
 
-  // Keep process alive
   await new Promise<void>((resolve) => {
     process.on('SIGINT', () => {
       console.log('\nDisconnecting…')
       ws.close()
       resolve()
     })
+  })
+}
+
+export async function maybeRunGuidedMode(args: {
+  session?: string
+  agent?: string
+  key?: string
+  partyUrl: string
+  workdir?: string
+  githubToken?: string
+}): Promise<void> {
+  let { session, agent, key } = args
+
+  if (!session || !agent || !key) {
+    const guided = await runGuidedMode()
+    session = guided.sessionId
+    agent = guided.agentId
+    key = guided.apiKey
+
+    console.log(`\nConnecting to session ${session} as ${agent}…`)
+    console.log('✓ Starting connection\n')
+
+    printNonInteractiveHint(session, agent, key)
+  }
+
+  await connectToSession({
+    sessionId: session,
+    agentId: agent,
+    apiKey: key,
+    partyUrl: args.partyUrl,
+    workdir: args.workdir,
+    githubToken: args.githubToken,
   })
 }
