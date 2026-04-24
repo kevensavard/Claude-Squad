@@ -39,12 +39,12 @@ describe('verifySupabase', () => {
     expect(r.ok).toBe(true)
   })
 
-  it('returns error on non-200', async () => {
+  it('returns ok on any HTTP response (even 401) — key validation is in Migrations step', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co')
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'key')
     vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }))
     const r = await verifySupabase()
-    expect(r.ok).toBe(false)
+    expect(r.ok).toBe(true)
   })
 })
 
