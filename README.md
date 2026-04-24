@@ -10,6 +10,7 @@ Real-time multiplayer development platform. Share a group chat with your team, t
 - GitHub account (for OAuth App + repo operations)
 - [Anthropic](https://console.anthropic.com) API key
 - Node.js 20+, pnpm 9+
+  - Install pnpm: `npm install -g pnpm@9`
 
 ## Setup (5 steps)
 
@@ -39,7 +40,7 @@ pnpm install
 ```bash
 cp .env.example apps/web/.env.local
 cp .env.example apps/party/.env
-# Edit both files — see docs for all variables
+# Edit both files — see docs/ENV.md for all variables and where to find them
 ```
 
 ### 5. Deploy
