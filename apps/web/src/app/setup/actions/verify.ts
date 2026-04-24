@@ -8,10 +8,9 @@ export async function verifySupabase(): Promise<VerifyResult> {
   if (!url) return { ok: false, error: 'NEXT_PUBLIC_SUPABASE_URL is not set in .env.local' }
   if (!key) return { ok: false, error: 'NEXT_PUBLIC_SUPABASE_ANON_KEY is not set in .env.local' }
   try {
-    const res = await fetch(`${url}/rest/v1/`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    })
-    if (!res.ok) return { ok: false, error: `Supabase returned HTTP ${res.status}. Check your URL and anon key.` }
+    // /auth/v1/settings is a public endpoint — confirms the URL points to a real Supabase project
+    const res = await fetch(`${url}/auth/v1/settings`)
+    if (!res.ok) return { ok: false, error: `Cannot reach Supabase at ${url}. Check NEXT_PUBLIC_SUPABASE_URL.` }
     return { ok: true }
   } catch (err) {
     return { ok: false, error: `Cannot reach Supabase: ${err instanceof Error ? err.message : 'network error'}` }
