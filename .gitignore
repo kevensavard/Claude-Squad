@@ -8,3 +8,5 @@ apps/party/.env
 .turbo
 .claude/
 .worktrees/
+graphify-out/
+packages/squad-skill/hello.text

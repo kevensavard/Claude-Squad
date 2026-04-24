@@ -8,7 +8,7 @@ export const metadata = { title: 'Setup — Squad' }
 export default function SetupPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900">Squad Setup</h1>
+      <h1 className="text-3xl font-bold text-gray-900">Claude Squad Setup</h1>
       <p className="mt-2 text-gray-600">
         Verify each service connection before creating your first session. Click{' '}
         <strong>Verify</strong> on each step.

@@ -1,0 +1,24 @@
+{
+  "name": "@squad/agent-runner",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit --outDir /dev/null"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@octokit/rest": "^20.0.0",
+    "@squad/types": "workspace:*",
+    "ws": "^8.18.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.14",
+    "typescript": "^5.4.0"
+  }
+}
