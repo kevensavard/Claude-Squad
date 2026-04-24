@@ -1,3 +1,5 @@
+'use server'
+
 export type VerifyResult = { ok: true } | { ok: false; error: string }
 
 export async function verifySupabase(): Promise<VerifyResult> {
