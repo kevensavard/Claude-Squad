@@ -350,6 +350,9 @@ export default class SSSServer implements Party.Server {
     if (resource === 'dispatch') {
       return this.handleDispatch(req)
     }
+    if (resource === 'health') {
+      return Response.json({ ok: true })
+    }
 
     return new Response('Not found', { status: 404 })
   }
@@ -405,9 +408,14 @@ export default class SSSServer implements Party.Server {
   private async handleDispatch(req: Party.Request): Promise<Response> {
     if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
-    const body = await req.json() as {
+    let body: {
       tasks: Task[]
       ownerships: Array<{ path: string; agentId: string; taskId: string; tier: 'owned' | 'shared-ro' }>
+    }
+    try {
+      body = await req.json() as typeof body
+    } catch {
+      return Response.json({ error: 'invalid body' }, { status: 400 })
     }
 
     // Store tasks
@@ -427,10 +435,17 @@ export default class SSSServer implements Party.Server {
     }
     await this.room.storage.put('ownership', updatedOwnership)
 
-    // Update session status to 'building'
+    // Update session status (never downgrade from 'done')
     const session = await this.room.storage.get<SessionState>('session')
-    if (session) {
-      await this.room.storage.put('session', { ...session, status: 'building' })
+    if (!session) return new Response('Session not initialized', { status: 500 })
+
+    if (session.status !== 'done') {
+      const updatedSession = { ...session, status: 'building' as const }
+      await this.room.storage.put('session', updatedSession)
+      this.room.broadcast(JSON.stringify({
+        type: 'session_state',
+        payload: updatedSession,
+      } satisfies ServerMessage))
     }
 
     // Broadcast build_started + ownership update
