@@ -68,7 +68,7 @@ export function handleTokenUpdate(
   return { ok: true, runningTotal }
 }
 
-interface AppState {
+export interface AppState {
   agents: AgentRegistry
   tasks: TaskQueue
   session: SessionState
@@ -89,6 +89,7 @@ export function applyClientMessage(state: AppState, msg: ClientMessage): AppStat
         currentTaskId: null,
         lastHeartbeat: Date.now(),
         tokensUsed: 0,
+        role: msg.role ?? 'agent',
       }
       break
     }
@@ -204,6 +205,13 @@ export function applyClientMessage(state: AppState, msg: ClientMessage): AppStat
 
     case 'broadcast_agent_message': {
       // Stateless — handled at server level in onMessage
+      break
+    }
+
+    case 'orchestrator_dispatch': {
+      for (const task of msg.taskGraph) {
+        tasks[task.id] = task
+      }
       break
     }
   }
