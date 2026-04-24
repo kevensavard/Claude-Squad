@@ -62,7 +62,6 @@ describe('orchestrator_dispatch', () => {
       type: 'orchestrator_dispatch',
       taskGraph: [task],
     } as ClientMessage)
-    expect(next.tasks['t1']).toBeDefined()
-    expect(next.tasks['t1']?.title).toBe('Auth')
+    expect(next.tasks['t1']).toEqual(task)
   })
 })

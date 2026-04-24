@@ -324,6 +324,9 @@ export default class SSSServer implements Party.Server {
     if (msg.type === 'dispatch_tasks') {
       this.room.broadcast(JSON.stringify({ type: 'build_started', taskGraph: msg.tasks } satisfies ServerMessage))
     }
+    if (msg.type === 'orchestrator_dispatch') {
+      this.room.broadcast(JSON.stringify({ type: 'build_started', taskGraph: msg.taskGraph } satisfies ServerMessage))
+    }
     if (msg.type === 'publish_contract') {
       this.room.broadcast(JSON.stringify({ type: 'contract_published', payload: msg.contract } satisfies ServerMessage))
     }
