@@ -1,0 +1,41 @@
+# GitHub OAuth Setup
+
+Squad uses GitHub OAuth for user login and for the agent-runner to create branches and open pull requests.
+
+## 1. Create an OAuth App
+
+1. Go to **GitHub → Settings → Developer settings → OAuth Apps**
+2. Click **New OAuth App**
+3. Fill in:
+   - **Application name:** Squad (or any name)
+   - **Homepage URL:** `https://your-app.vercel.app`
+   - **Authorization callback URL:** `https://your-app.vercel.app/auth/callback/github`
+
+> For local development, add a second OAuth App (or update the callback URL) with `http://localhost:3000/auth/callback/github`.
+
+4. Click **Register application**
+
+## 2. Get your credentials
+
+On the OAuth App page:
+- Copy the **Client ID**
+- Click **Generate a new client secret** and copy it immediately (shown once)
+
+## 3. Add env vars
+
+```bash
+GITHUB_CLIENT_ID=Ov23liXXXXXXXXXXXXXX
+GITHUB_CLIENT_SECRET=your-client-secret
+GITHUB_WEBHOOK_SECRET=any-random-string-you-choose
+```
+
+Add these to `apps/web/.env.local`.
+
+## 4. Enable GitHub OAuth in Supabase
+
+1. Go to your Supabase project → **Authentication → Providers**
+2. Find **GitHub** and toggle it on
+3. Enter your Client ID and Client Secret
+4. Save
+
+Supabase handles the OAuth redirect flow — your Next.js app just calls `supabase.auth.signInWithOAuth({ provider: 'github' })`.

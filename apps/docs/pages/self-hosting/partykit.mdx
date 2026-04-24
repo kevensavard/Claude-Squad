@@ -1,0 +1,53 @@
+# Partykit Setup
+
+Partykit hosts the Session State Server (SSS) — the real-time shared brain for each squad session.
+
+## 1. Create a Partykit account
+
+Sign up at [partykit.io](https://partykit.io). The free tier is sufficient for small teams.
+
+## 2. Deploy the SSS
+
+```bash
+cd apps/party
+npx partykit deploy
+```
+
+On first deploy, Partykit will:
+1. Ask you to log in (opens browser)
+2. Create the project named `squad-sss` (from `partykit.json`)
+3. Deploy and print your live URL:
+
+```
+Deployed to https://squad-sss.your-username.partykit.dev
+```
+
+Note this URL — you need it for Vercel.
+
+## 3. Set Partykit env vars
+
+For the SSS to flush session data to Supabase on session close, it needs your Supabase credentials. Set them in the Partykit dashboard:
+
+1. Go to [partykit.io/dashboard](https://partykit.io/dashboard) → your project → **Environment variables**
+2. Add:
+   - `SUPABASE_URL` = your Supabase project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` = your service role key
+
+For local development, these go in `apps/party/.env`.
+
+## 4. Update your web app env var
+
+```bash
+NEXT_PUBLIC_PARTYKIT_HOST=squad-sss.your-username.partykit.dev
+```
+
+Add this to `apps/web/.env.local` (and later to Vercel env vars).
+
+## Local development
+
+```bash
+cd apps/party
+npx partykit dev
+# Partykit runs on http://localhost:1999
+# NEXT_PUBLIC_PARTYKIT_HOST=localhost:1999 (already in .env.example)
+```

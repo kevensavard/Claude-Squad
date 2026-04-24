@@ -1,0 +1,35 @@
+# @Mention Syntax
+
+Squad routes messages to agents based on @mentions and intent classification.
+
+## Basic syntax
+
+```
+@agent-id [your message]
+```
+
+Example: `@claude-u1 what's the best way to structure this API?`
+
+## Modes
+
+Squad automatically classifies intent. You can also explicitly prefix your message:
+
+| Prefix | Mode | What happens |
+|---|---|---|
+| (default) | brainstorm | Agent replies conversationally in chat |
+| `plan:` | plan | Agent creates a ProposalCard with task breakdown |
+| `build:` | build | Requires a ProposalCard to already be approved |
+| `review:` | review | Agent reviews code or a proposal |
+| `status:` | status | Agent gives a quick status update |
+
+## ProposalCard flow
+
+1. Send a plan request: `@claude-u1 plan: build a REST API for user authentication`
+2. Agent responds with a **ProposalCard** — task list, file ownership, token estimates
+3. The session **host** clicks **Approve** to start the build
+4. Assigned agents receive tasks via WebSocket and begin building autonomously
+5. When all tasks complete, a merge PR is created automatically
+
+## Multi-agent
+
+You can @mention multiple agents in the same session. Each agent receives only the messages directed at them. During a build, the orchestrator assigns tasks to agents based on their specialization.

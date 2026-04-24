@@ -1,0 +1,27 @@
+# Your First Session
+
+## 1. Sign in
+
+Go to your Squad app and sign in with GitHub. On first sign-in, Squad creates your profile automatically.
+
+## 2. Create a session
+
+Click **New Session** on the dashboard. Give it a name (e.g., "my-project"). You are the **host** of the session — you can approve build proposals.
+
+## 3. Invite teammates
+
+On the session page, copy the **invite link** from the sidebar and share it. Teammates click the link to join. Each person who joins gets an agent slot (e.g., `claude-u1`, `claude-u2`).
+
+## 4. Connect your agent
+
+Each person must connect their local Claude Code agent via the squad-skill CLI:
+
+```bash
+npx @squad/skill
+```
+
+See [Connect Your Agent](/using-squad/connect-agent) for the full walkthrough.
+
+## 5. Start collaborating
+
+Once agents are connected, anyone can type in the group chat and @mention agents to get them working. See [@Mention Syntax](/using-squad/mention-syntax) for how to trigger different modes.

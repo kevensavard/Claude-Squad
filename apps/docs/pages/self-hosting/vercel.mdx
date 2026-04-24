@@ -1,0 +1,50 @@
+# Vercel Deployment
+
+The Next.js web app deploys to Vercel.
+
+## Prerequisites
+
+Complete Supabase, GitHub OAuth, and Partykit setup first — you need all env vars before deploying.
+
+## 1. Connect repo to Vercel
+
+1. Go to [vercel.com](https://vercel.com) → **New Project**
+2. Import your Squad GitHub repo
+3. Set **Root Directory** to `apps/web`
+4. Framework preset: **Next.js** (auto-detected)
+
+## 2. Add environment variables
+
+In the Vercel project settings → **Environment Variables**, add all of the following:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+ANTHROPIC_API_KEY=sk-ant-...
+NEXT_PUBLIC_PARTYKIT_HOST=squad-sss.your-username.partykit.dev
+GITHUB_CLIENT_ID=Ov23li...
+GITHUB_CLIENT_SECRET=your-secret
+GITHUB_WEBHOOK_SECRET=your-webhook-secret
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+```
+
+> Set `NEXT_PUBLIC_APP_URL` to the final Vercel URL (e.g. `https://squad-abc123.vercel.app`). You can find this after the first deploy.
+
+## 3. Deploy
+
+Click **Deploy**. Vercel builds and deploys in ~2 minutes.
+
+## 4. Update GitHub OAuth callback
+
+After deploying, go back to your GitHub OAuth App and update the **Authorization callback URL** to your actual Vercel URL:
+
+```
+https://your-actual-app.vercel.app/auth/callback/github
+```
+
+Also update this in your Supabase Auth → GitHub provider settings.
+
+## 5. Verify setup
+
+Visit `https://your-app.vercel.app/setup` to run the in-app setup wizard. It checks each service connection and shows exactly what's working and what isn't.

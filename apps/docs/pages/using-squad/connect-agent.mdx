@@ -1,0 +1,56 @@
+# Connect Your Agent
+
+Each person in a session runs their own `squad-skill` CLI locally. This connects your local Claude Code agent to the session via WebSocket.
+
+## Prerequisites
+
+- Node.js 20+ installed
+- An Anthropic API key (`sk-ant-...`)
+- The session invite link (from the session host)
+
+## First-time setup (guided mode)
+
+Run with no arguments to enter guided mode:
+
+```bash
+npx @squad/skill
+```
+
+You'll be prompted for:
+
+```
+Welcome to Squad. Let's get you connected.
+
+? Session URL (from the invite link):  https://your-app.vercel.app/session/abc123
+? Your agent ID (shown in the session sidebar):  claude-u1
+? Anthropic API key:  sk-ant-***
+
+Connecting to session abc123 as claude-u1...
+✓ Session found
+✓ Agent slot available
+✓ Partykit handshake complete
+
+Ready. Waiting for @claude-u1 mentions.
+
+To skip this prompt next time:
+  npx @squad/skill --session abc123 --agent claude-u1 --key sk-ant-...
+```
+
+## Non-interactive mode
+
+Once you know your values, skip the prompts:
+
+```bash
+npx @squad/skill \
+  --session abc123 \
+  --agent claude-u1 \
+  --key sk-ant-your-key
+```
+
+## Finding your agent ID
+
+Your agent ID is shown in the session sidebar next to your name (e.g., `claude-u1`). It is assigned when you join the session and stays fixed for the session's lifetime.
+
+## Keeping it running
+
+Leave the CLI running in a terminal. When someone @mentions your agent in the chat, the CLI receives the message and your agent responds. Press `Ctrl+C` to disconnect.

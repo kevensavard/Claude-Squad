@@ -1,0 +1,33 @@
+# Self-Hosting Overview
+
+## What you're setting up
+
+| Service | Purpose | Where |
+|---|---|---|
+| Supabase | Database, auth, group chat realtime | supabase.com (managed) |
+| Partykit | Session State Server (WebSocket room) | partykit.io (managed) |
+| Vercel | Next.js web app | vercel.com (managed) |
+| GitHub | OAuth login + branch/PR operations | github.com (OAuth App) |
+
+All four services have free tiers that cover small team usage.
+
+## Setup order
+
+1. [Supabase](/self-hosting/supabase) — first, because Vercel needs the connection strings
+2. [GitHub OAuth](/self-hosting/github-oauth) — second, because Vercel needs the client ID/secret
+3. [Partykit](/self-hosting/partykit) — third, because Vercel needs the `.partykit.dev` host
+4. [Vercel](/self-hosting/vercel) — last, after all other env vars are known
+
+## Local development
+
+You can run everything locally before deploying:
+
+```bash
+pnpm install
+# Fill in apps/web/.env.local and apps/party/.env
+pnpm dev
+# Next.js → http://localhost:3000
+# Partykit → http://localhost:1999
+```
+
+After local setup, use the in-app wizard at [http://localhost:3000/setup](http://localhost:3000/setup) to verify each service is connected correctly.

@@ -1,0 +1,55 @@
+# Troubleshooting
+
+## Setup wizard errors
+
+### "NEXT_PUBLIC_SUPABASE_URL is not set"
+
+Add `NEXT_PUBLIC_SUPABASE_URL` to `apps/web/.env.local` and restart the dev server (`pnpm dev`). The value is your Supabase Project URL from Settings → API.
+
+### "Supabase returned HTTP 401"
+
+Your `NEXT_PUBLIC_SUPABASE_ANON_KEY` is wrong or missing. Re-copy it from Supabase → Settings → API → anon public.
+
+### "Migrations not applied"
+
+Open the Supabase SQL editor and run each migration from `docs/DATABASE.md` in order (001 → 004). The wizard checks for the `sessions` table — if it's missing, migrations haven't run.
+
+### "Anthropic key rejected"
+
+Verify your key starts with `sk-ant-` and has remaining credits at [console.anthropic.com](https://console.anthropic.com).
+
+### "Cannot reach Partykit at localhost:1999"
+
+Run `pnpm dev` from the repo root — this starts both Next.js and Partykit. Or run `npx partykit dev` from `apps/party/` directly.
+
+---
+
+## squad-skill errors
+
+### "Agent 'claude-u2' not found in session"
+
+Your `--agent` flag must match the agent ID shown in the session sidebar exactly (e.g., `claude-u1`). Agent IDs are assigned when you join a session.
+
+### "Cannot reach SSS at localhost:1999"
+
+Partykit is not running. Start it with `pnpm dev` from the repo root or `npx partykit dev` from `apps/party/`.
+
+### "Session not found or invite link expired"
+
+Ask the session host to share a fresh invite link. Session IDs are UUIDs — make sure you're copying the full URL.
+
+---
+
+## Common issues
+
+### Users can see each other's sessions
+
+Check your Supabase RLS policies. Run `002_rls_policies.sql` in the SQL editor. RLS must be enabled on all tables.
+
+### Realtime messages not appearing
+
+Confirm Realtime is enabled on the `messages` table: Supabase → Database → Replication → messages → INSERT enabled.
+
+### Build tasks not dispatching after Approve
+
+Check that `NEXT_PUBLIC_PARTYKIT_HOST` points to your deployed Partykit instance (not `localhost`) in your Vercel env vars. The Approve button calls the SSS `/dispatch` endpoint.

@@ -1,0 +1,44 @@
+# Environment Variable Reference
+
+## `apps/web/.env.local`
+
+### Supabase
+
+| Variable | Description | Where to find |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Supabase dashboard → Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (safe for browser) | Supabase dashboard → Settings → API → anon public |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key — server only, never browser | Supabase dashboard → Settings → API → service_role |
+
+### Anthropic
+
+| Variable | Description | Where to find |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Anthropic API key starting with `sk-ant-` | console.anthropic.com → API Keys |
+
+### Partykit
+
+| Variable | Description | Example |
+|---|---|---|
+| `NEXT_PUBLIC_PARTYKIT_HOST` | Partykit SSS hostname (no protocol) | `squad-sss.user.partykit.dev` or `localhost:1999` |
+
+### GitHub
+
+| Variable | Description | Where to find |
+|---|---|---|
+| `GITHUB_CLIENT_ID` | GitHub OAuth App client ID | GitHub → Settings → Developer settings → OAuth Apps |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App client secret | Same page — generate once |
+| `GITHUB_WEBHOOK_SECRET` | Shared secret for webhook validation | Any random string you choose |
+
+### App
+
+| Variable | Description | Example |
+|---|---|---|
+| `NEXT_PUBLIC_APP_URL` | Public URL of the deployed app | `https://your-app.vercel.app` or `http://localhost:3000` |
+
+## `apps/party/.env`
+
+| Variable | Description |
+|---|---|
+| `SUPABASE_URL` | Same as `NEXT_PUBLIC_SUPABASE_URL` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same service role key — SSS flushes data to Supabase on session close |

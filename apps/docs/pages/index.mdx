@@ -1,3 +1,25 @@
 # Squad Documentation
 
-Coming soon — see the self-hosting and using-squad sections in the sidebar.
+Squad is a real-time multiplayer development platform. Multiple users share a group chat where they tag their individual Claude Code agents. When ready, agents coordinate autonomously to build a shared codebase in parallel — each agent owning a distinct slice of the filesystem, with token costs split across participants.
+
+## Quick links
+
+- [Self-hosting overview](/self-hosting/overview) — what you're setting up
+- [Supabase setup](/self-hosting/supabase) — database + auth + realtime
+- [GitHub OAuth](/self-hosting/github-oauth) — required for branch + merge operations
+- [Partykit deployment](/self-hosting/partykit) — session state server
+- [Vercel deployment](/self-hosting/vercel) — web app
+- [Connect your agent](/using-squad/connect-agent) — squad-skill CLI
+- [Troubleshooting](/troubleshooting) — common errors
+
+## Architecture
+
+```
+Browser ←→ Supabase Realtime (group chat)
+Browser ←→ Partykit SSS (agent registry, task queue, file ownership)
+Next.js API routes ←→ Anthropic API (intent classification, planning)
+squad-skill CLI ←→ Partykit SSS (agent WebSocket connection)
+agent-runner ←→ GitHub API (branch creation, PR merge)
+```
+
+Four services to deploy: Supabase, Vercel (Next.js), Partykit, and GitHub OAuth App.
