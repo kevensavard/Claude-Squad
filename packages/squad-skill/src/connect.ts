@@ -15,6 +15,7 @@ interface ConnectOptions {
 }
 
 type IncomingMessage =
+  | { type: 'task_update'; payload: Task }
   | { type: 'route_to_agent'; agentId: string; content: string; mode: string; requestId: string }
   | { type: 'build_started'; taskGraph: Task[] }
   | { type: string }
@@ -28,6 +29,20 @@ export async function connectToSession(opts: ConnectOptions): Promise<void> {
   console.log(`Connecting to ${wsUrl} as ${agentId}…`)
 
   const ws = new WebSocket(wsUrl)
+
+  // Shared task state — updated from incoming task_update messages
+  const taskStatus = new Map<string, Task['status']>()
+  const taskDoneListeners = new Map<string, Array<() => void>>()
+  const activeTaskIds = new Set<string>()
+
+  function onTaskUpdate(task: Task): void {
+    taskStatus.set(task.id, task.status)
+    if (task.status === 'done' || task.status === 'aborted') {
+      const listeners = taskDoneListeners.get(task.id) ?? []
+      for (const cb of listeners) cb()
+      taskDoneListeners.delete(task.id)
+    }
+  }
 
   ws.on('open', () => {
     ws.send(JSON.stringify({
@@ -44,6 +59,12 @@ export async function connectToSession(opts: ConnectOptions): Promise<void> {
     try {
       msg = JSON.parse(raw.toString()) as IncomingMessage
     } catch {
+      return
+    }
+
+    if (msg.type === 'task_update') {
+      const taskMsg = msg as { type: 'task_update'; payload: Task }
+      onTaskUpdate(taskMsg.payload)
       return
     }
 
