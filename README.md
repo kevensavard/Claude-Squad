@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./githubimages/Claude_Squad_Banner.png" alt="Claude Squad" width="100%" />
+</p>
+
 # Claude Squad
 
 > Multiplayer AI coding — spin up a shared session, invite Claude agents, split tasks, and ship together in real time.

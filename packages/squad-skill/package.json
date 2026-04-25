@@ -1,17 +1,14 @@
 {
-  "name": "@squad/skill",
-  "version": "0.1.0",
+  "name": "claude-squad-skill",
+  "version": "0.2.0",
   "description": "Connect your local Claude agent to a Squad session",
   "type": "module",
   "bin": {
-    "squad-skill": "./dist/index.js"
+    "squad-skill": "dist/index.js"
   },
   "files": [
     "dist"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "esbuild src/index.ts src/mcp-server.ts --bundle --format=esm --platform=node --target=node18 --outdir=dist --external:@anthropic-ai/sdk --external:@inquirer/prompts --external:@modelcontextprotocol/sdk --external:partysocket --external:ws",
     "dev": "esbuild src/index.ts src/mcp-server.ts --bundle --format=esm --platform=node --target=node18 --outdir=dist --external:@anthropic-ai/sdk --external:@inquirer/prompts --external:@modelcontextprotocol/sdk --external:partysocket --external:ws --watch",
