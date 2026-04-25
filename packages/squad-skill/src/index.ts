@@ -2,6 +2,7 @@
 
 import { maybeRunGuidedMode } from './connect.js'
 import { isClaudeInstalled, registerMcpServer, launchClaude } from './detect-claude.js'
+import { buildSystemPrompt } from './system-prompt.js'
 
 function parseArgs() {
   const args = process.argv.slice(2)
@@ -59,7 +60,7 @@ async function main() {
         partyUrl: args.partyUrl !== 'ws://localhost:1999' ? args.partyUrl : undefined,
       })
       console.log('Launching Claude Code…')
-      launchClaude()
+      launchClaude(buildSystemPrompt(args.session, args.agent, args.role))
     } else {
       console.log('Claude Code not found. Falling back to API key mode…')
       await maybeRunGuidedMode({

@@ -20,6 +20,7 @@ export function registerMcpServer(opts: {
   execSync(`claude mcp add claude-squad-${opts.sessionId} -- ${cmd}`, { stdio: 'inherit' })
 }
 
-export function launchClaude(): void {
-  spawnSync('claude', [], { stdio: 'inherit' })
+export function launchClaude(systemPrompt?: string): void {
+  const args = systemPrompt ? ['--system-prompt', systemPrompt] : []
+  spawnSync('claude', args, { stdio: 'inherit' })
 }
