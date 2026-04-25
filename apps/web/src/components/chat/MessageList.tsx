@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 import type { Message, SessionMember } from '@/types/database'
 import { AgentMessage } from './AgentMessage'
 import { ProposalCard } from './ProposalCard'
+import { BuildSummaryCard } from './BuildSummaryCard'
 import type { ProposalCard as ProposalCardData } from '@/lib/anthropic/plan'
 
 interface MessageListProps {
@@ -34,6 +35,10 @@ export function MessageList({
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
       {messages.map((msg) => {
         if (msg.sender_type === 'system') {
+          const meta = msg.metadata as Record<string, unknown>
+          if (meta?.type === 'build_summary') {
+            return <BuildSummaryCard key={msg.id} metadata={meta} />
+          }
           return (
             <div key={msg.id} className="text-center py-2">
               <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
