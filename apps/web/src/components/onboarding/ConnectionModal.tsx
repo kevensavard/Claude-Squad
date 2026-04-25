@@ -1,18 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import type { AgentRecord } from '@squad/types'
 
 interface ConnectionModalProps {
   agentId: string
   sessionId: string
+  role: 'orchestrator' | 'agent'
+  agentStatuses: Record<string, AgentRecord>
   onKeySubmit: (key: string) => void
   onClose: () => void
 }
 
-export function ConnectionModal({ agentId, sessionId, onKeySubmit, onClose }: ConnectionModalProps) {
+export function ConnectionModal({
+  agentId,
+  sessionId,
+  role,
+  agentStatuses,
+  onKeySubmit,
+  onClose,
+}: ConnectionModalProps) {
   const [tab, setTab] = useState<'key' | 'skill'>('key')
   const [key, setKey] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [waiting, setWaiting] = useState(false)
+
+  const command = `npx @squad/skill connect --session ${sessionId} --agent ${agentId} --role ${role}`
+
+  // Auto-close when agent registers via Claude Code (tab === 'skill' + waiting)
+  useEffect(() => {
+    if (!waiting) return
+    const agent = agentStatuses[agentId]
+    if (agent && Date.now() - agent.lastHeartbeat < 30_000) {
+      onClose()
+    }
+  }, [agentStatuses, agentId, waiting, onClose])
 
   function handleSubmitKey(e: React.FormEvent) {
     e.preventDefault()
@@ -24,12 +46,21 @@ export function ConnectionModal({ agentId, sessionId, onKeySubmit, onClose }: Co
     onClose()
   }
 
+  function handleStartWaiting() {
+    setWaiting(true)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-lg bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Connect {agentId}
+            {role === 'orchestrator' && (
+              <span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-400">
+                (orchestrator)
+              </span>
+            )}
           </h2>
           <button
             onClick={onClose}
@@ -62,7 +93,7 @@ export function ConnectionModal({ agentId, sessionId, onKeySubmit, onClose }: Co
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
           >
-            Local Claude Code (squad-skill)
+            Local Claude Code
           </button>
         </div>
 
@@ -98,24 +129,46 @@ export function ConnectionModal({ agentId, sessionId, onKeySubmit, onClose }: Co
 
         {tab === 'skill' && (
           <div className="space-y-3">
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              Run this in your terminal. Your local Claude Code will connect as <strong>{agentId}</strong>:
-            </p>
-            <pre className="bg-slate-900 text-green-400 text-xs rounded-lg p-3 overflow-x-auto select-all">
-              {`npx @squad/skill connect --agent ${agentId} --session ${sessionId}`}
-            </pre>
-            <p className="text-xs text-slate-400">
-              Your Claude Code API key is used automatically. Costs appear on your Anthropic bill.
-            </p>
-            <p className="text-xs text-slate-400">
-              Once connected, the agent indicator next to your name will turn green.
-            </p>
-            <button
-              onClick={onClose}
-              className="w-full py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-lg transition-colors"
-            >
-              I&apos;ll set it up now
-            </button>
+            {!waiting ? (
+              <>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  Run this in your terminal. Your local Claude Code will connect as <strong>{agentId}</strong>:
+                </p>
+                <pre className="bg-slate-900 text-green-400 text-xs rounded-lg p-3 overflow-x-auto select-all whitespace-pre-wrap">
+                  {command}
+                </pre>
+                <p className="text-xs text-slate-400">
+                  Requires Claude Code CLI. Install at{' '}
+                  <a
+                    href="https://claude.ai/code"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline hover:text-slate-600"
+                  >
+                    claude.ai/code
+                  </a>
+                </p>
+                <button
+                  onClick={handleStartWaiting}
+                  className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  I ran it — waiting for connection
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Waiting for <strong>{agentId}</strong> to connect…
+                </p>
+                <button
+                  onClick={() => setWaiting(false)}
+                  className="text-xs text-slate-400 hover:text-slate-600 underline"
+                >
+                  Back
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

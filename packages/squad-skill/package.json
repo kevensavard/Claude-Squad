@@ -6,20 +6,30 @@
   "bin": {
     "squad-skill": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "esbuild src/index.ts src/mcp-server.ts --bundle --format=esm --platform=node --target=node18 --outdir=dist --external:@anthropic-ai/sdk --external:@inquirer/prompts --external:@modelcontextprotocol/sdk --external:partysocket --external:ws",
+    "dev": "esbuild src/index.ts src/mcp-server.ts --bundle --format=esm --platform=node --target=node18 --outdir=dist --external:@anthropic-ai/sdk --external:@inquirer/prompts --external:@modelcontextprotocol/sdk --external:partysocket --external:ws --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@inquirer/prompts": "^7.0.0",
-    "@squad/agent-runner": "workspace:*",
-    "@squad/types": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "partysocket": "^1.0.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@squad/agent-runner": "workspace:*",
+    "@squad/types": "workspace:*",
     "@types/ws": "^8.5.14",
-    "typescript": "^5.8.0"
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0",
+    "vitest": "^2.0.0"
   }
 }

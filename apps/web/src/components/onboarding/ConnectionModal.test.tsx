@@ -5,6 +5,8 @@ describe('ConnectionModal', () => {
   const defaultProps = {
     agentId: 'claude-u1',
     sessionId: 'test-session-123',
+    role: 'agent' as const,
+    agentStatuses: {},
     onKeySubmit: vi.fn(),
     onClose: vi.fn(),
   }

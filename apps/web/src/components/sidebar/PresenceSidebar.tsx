@@ -41,6 +41,7 @@ export function PresenceSidebar({
           const isOnline = agent
             ? Date.now() - agent.lastHeartbeat < 90_000
             : false
+          const isOrchestrator = agent?.role === 'orchestrator'
 
           return (
             <div key={member.user_id} className="space-y-2">
@@ -53,6 +54,11 @@ export function PresenceSidebar({
                   {member.display_name.replace(/^Claude \(/, '').replace(/\)$/, '')}
                   {member.is_host && (
                     <span className="ml-1 text-xs text-slate-500">(host)</span>
+                  )}
+                  {isOrchestrator && (
+                    <span className="ml-1 text-xs text-amber-500" title="Orchestrator">
+                      ♛
+                    </span>
                   )}
                   {isCurrentUser && (
                     <span className="ml-1 text-xs text-purple-500">(you)</span>

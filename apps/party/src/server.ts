@@ -68,7 +68,7 @@ export function handleTokenUpdate(
   return { ok: true, runningTotal }
 }
 
-interface AppState {
+export interface AppState {
   agents: AgentRegistry
   tasks: TaskQueue
   session: SessionState
@@ -89,6 +89,7 @@ export function applyClientMessage(state: AppState, msg: ClientMessage): AppStat
         currentTaskId: null,
         lastHeartbeat: Date.now(),
         tokensUsed: 0,
+        role: msg.role ?? 'agent',
       }
       break
     }
@@ -206,6 +207,13 @@ export function applyClientMessage(state: AppState, msg: ClientMessage): AppStat
       // Stateless — handled at server level in onMessage
       break
     }
+
+    case 'orchestrator_dispatch': {
+      for (const task of msg.taskGraph) {
+        tasks[task.id] = task
+      }
+      break
+    }
   }
 
   return { agents, tasks, session }
@@ -315,6 +323,9 @@ export default class SSSServer implements Party.Server {
     }
     if (msg.type === 'dispatch_tasks') {
       this.room.broadcast(JSON.stringify({ type: 'build_started', taskGraph: msg.tasks } satisfies ServerMessage))
+    }
+    if (msg.type === 'orchestrator_dispatch') {
+      this.room.broadcast(JSON.stringify({ type: 'build_started', taskGraph: msg.taskGraph } satisfies ServerMessage))
     }
     if (msg.type === 'publish_contract') {
       this.room.broadcast(JSON.stringify({ type: 'contract_published', payload: msg.contract } satisfies ServerMessage))
