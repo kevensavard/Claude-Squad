@@ -83,6 +83,7 @@ export async function startMcpServer(opts: McpServerOptions): Promise<void> {
   const wsUrl = `${partyUrl.replace(/^https?/, 'ws')}/parties/main/${sessionId}`
   let ws!: WebSocket
   let reconnectDelay = 1000
+  let heartbeatInterval: ReturnType<typeof setInterval> | null = null
 
   function connect(): void {
     ws = new WebSocket(wsUrl)
@@ -98,6 +99,9 @@ export async function startMcpServer(opts: McpServerOptions): Promise<void> {
           role,
         })
       )
+      heartbeatInterval = setInterval(() => {
+        sendWs({ type: 'heartbeat', agentId })
+      }, 30_000)
     })
 
     ws.on('message', (raw) => {
@@ -111,6 +115,10 @@ export async function startMcpServer(opts: McpServerOptions): Promise<void> {
     })
 
     ws.on('close', () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval)
+        heartbeatInterval = null
+      }
       setTimeout(() => {
         reconnectDelay = Math.min(reconnectDelay * 2, 30_000)
         connect()
@@ -160,18 +168,20 @@ export async function startMcpServer(opts: McpServerOptions): Promise<void> {
           content.slice(0, 120)
         )
         if (isBuildGoal) {
-          eventQueue.push({ type: 'build_goal', from: agentIdTarget, content })
+          eventQueue.push({ type: 'build_goal', from: 'user', content })
         } else {
-          eventQueue.push({ type: 'mention', from: agentIdTarget, content, requestId })
+          eventQueue.push({ type: 'mention', from: 'user', content, requestId })
         }
       }
     }
+    // TODO: populate pendingApprovals when server sends proposal events (not yet defined in ServerMessage)
   }
 
   function sendWs(payload: object): void {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload))
+    if (ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket not connected — retry after reconnection')
     }
+    ws.send(JSON.stringify(payload))
   }
 
   connect()
