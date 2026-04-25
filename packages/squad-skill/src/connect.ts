@@ -44,6 +44,58 @@ export async function connectToSession(opts: ConnectOptions): Promise<void> {
     }
   }
 
+  function waitForDependencies(depIds: string[]): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const pending = new Set(depIds.filter(id => taskStatus.get(id) !== 'done' && taskStatus.get(id) !== 'aborted'))
+      if (pending.size === 0) { resolve(); return }
+      for (const id of [...pending]) {
+        const listeners = taskDoneListeners.get(id) ?? []
+        listeners.push(() => {
+          pending.delete(id)
+          if (pending.size === 0) resolve()
+        })
+        taskDoneListeners.set(id, listeners)
+      }
+    })
+  }
+
+  async function runTaskWhenReady(task: Task): Promise<void> {
+    if (activeTaskIds.has(task.id)) return
+    activeTaskIds.add(task.id)
+    try {
+      if (task.dependsOn.length > 0) {
+        await waitForDependencies(task.dependsOn)
+      }
+      const anyAborted = task.dependsOn.some(id => taskStatus.get(id) === 'aborted')
+      if (anyAborted) {
+        console.log(`[${agentId}] Skipping ${task.title} — dependency aborted`)
+        ws.send(JSON.stringify({
+          type: 'task_blocked',
+          agentId,
+          taskId: task.id,
+          reason: 'dependency task was aborted',
+        }))
+        return
+      }
+      console.log(`[${agentId}] Starting: ${task.title}`)
+      await runAgent({
+        agentId,
+        userId: agentId,
+        sessionId,
+        task,
+        partyHost,
+        anthropicApiKey: apiKey,
+        githubToken,
+        workdir,
+      })
+      console.log(`[${agentId}] Done: ${task.title}`)
+    } catch (err) {
+      console.error(`[${agentId}] Task failed: ${task.title}`, err)
+    } finally {
+      activeTaskIds.delete(task.id)
+    }
+  }
+
   ws.on('open', () => {
     ws.send(JSON.stringify({
       type: 'register_agent',
