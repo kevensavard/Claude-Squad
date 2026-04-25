@@ -70,16 +70,13 @@ The 60s threshold matches the existing 30s heartbeat interval — two missed bea
 
 ### 4. Type changes (`@squad/types`)
 
-**New outbound SSS messages:**
+**No type changes.** The design preserves backward compatibility:
 
-```ts
-{ type: 'task_done';      taskId: string; agentId: string }
-{ type: 'task_available'; taskId: string; originalAgentId: string }
-```
+- `Task.assignedAgentId` stays `string` — original assignment is never cleared. Orphaned tasks keep their original `assignedAgentId`, which the reclaim logic uses to match agents when re-broadcasting.
+- No new ServerMessage types — existing `task_update` (already in SSS) is reused. When a task status is `pending` and was previously `in_progress`, agents check if the task's `assignedAgentId === agentId` to recognize it as their own orphaned task and reclaim it.
+- All other fields (`dependsOn`, task statuses, `AgentRecord`) already exist.
 
-**`Task.assignedAgentId`** changes from `string` to `string | null` (null = orphaned, available for re-claim).
-
-No other schema changes. All other fields (`dependsOn`, task statuses, `AgentRecord`) already exist.
+This approach keeps the schema immutable across sessions while enabling reclaim matching without additional type definitions.
 
 ---
 
