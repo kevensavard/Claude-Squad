@@ -177,6 +177,9 @@ importers:
       '@inquirer/prompts':
         specifier: ^7.0.0
         version: 7.10.1(@types/node@20.19.39)
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.0.0
+        version: 1.29.0(zod@3.25.76)
       '@squad/agent-runner':
         specifier: workspace:*
         version: link:../agent-runner

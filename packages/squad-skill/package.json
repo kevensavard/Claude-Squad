@@ -14,6 +14,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@inquirer/prompts": "^7.0.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@squad/agent-runner": "workspace:*",
     "@squad/types": "workspace:*",
     "partysocket": "^1.0.2",
