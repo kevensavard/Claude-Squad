@@ -117,6 +117,12 @@ export async function connectToSession(opts: ConnectOptions): Promise<void> {
     if (msg.type === 'task_update') {
       const taskMsg = msg as { type: 'task_update'; payload: Task }
       onTaskUpdate(taskMsg.payload)
+      // Orphan reclaim: if SSS reset one of our tasks to pending, pick it back up
+      const t = taskMsg.payload
+      if (t.status === 'pending' && t.assignedAgentId === agentId && !activeTaskIds.has(t.id)) {
+        console.log(`[${agentId}] Reclaiming orphaned task: ${t.title}`)
+        void runTaskWhenReady(t)
+      }
       return
     }
 
@@ -127,32 +133,21 @@ export async function connectToSession(opts: ConnectOptions): Promise<void> {
     }
 
     if (msg.type === 'build_started') {
-      const myTasks = (msg as { type: 'build_started'; taskGraph: Task[] }).taskGraph
-        .filter((t: Task) => t.assignedAgentId === agentId)
-
+      const buildMsg = msg as { type: 'build_started'; taskGraph: Task[] }
+      // Seed task state from the full graph so dependency gates work across agents
+      for (const task of buildMsg.taskGraph) {
+        taskStatus.set(task.id, task.status)
+      }
+      const myTasks = buildMsg.taskGraph.filter((t: Task) => t.assignedAgentId === agentId)
       if (myTasks.length === 0) {
         console.log(`[${agentId}] build_started — no tasks assigned to me`)
         return
       }
-      console.log(`[${agentId}] build_started — ${myTasks.length} task(s) assigned`)
-
+      console.log(`[${agentId}] build_started — ${myTasks.length} task(s) assigned, running in parallel`)
+      // Fire-and-forget: do NOT await here so the message handler stays responsive
+      // to incoming task_update messages that dependency gates need to see
       for (const task of myTasks) {
-        console.log(`[${agentId}] Starting: ${task.title}`)
-        try {
-          await runAgent({
-            agentId,
-            userId: agentId,
-            sessionId,
-            task,
-            partyHost,
-            anthropicApiKey: apiKey,
-            githubToken,
-            workdir,
-          })
-          console.log(`[${agentId}] Done: ${task.title}`)
-        } catch (err) {
-          console.error(`[${agentId}] Task failed: ${task.title}`, err)
-        }
+        void runTaskWhenReady(task)
       }
       return
     }
