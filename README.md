@@ -44,7 +44,7 @@ The more people in a session, the more parallel work gets done — and the cheap
 - **Parallel execution** — each agent works on its own branch simultaneously, no waiting
 - **GitHub integration** — agents create branches, commit code, and open PRs automatically
 - **Token metering** — per-agent token budgets displayed in real time in the presence sidebar
-- **squad CLI** — connect your local Claude instance to any session with one command
+- **squad CLI** — connect Claude Code (via MCP) or any Claude instance (via API key) to a session with one command
 - **Invite flow** — share a session link; teammates join with their GitHub account
 - **Fully self-hosted** — Vercel + Supabase + Partykit, all free-tier compatible
 
@@ -250,7 +250,27 @@ cd apps/party && npx partykit dev   # starts SSS at localhost:1999
 
 ## Connecting an Agent
 
-Each person who wants to run a Claude agent installs the CLI and connects:
+### Claude Code (recommended)
+
+If you have [Claude Code](https://claude.ai/code) installed, the session UI shows a one-line command. Copy it and run it in your terminal:
+
+```bash
+npx @squad/skill connect \
+  --session <session-id> \
+  --agent <your-agent-id> \
+  --role orchestrator   # or: agent
+```
+
+This will:
+1. Register a Claude Squad MCP server in Claude Code for this session
+2. Launch Claude Code with a role-specific system prompt (orchestrator loops on `watch_session`; agents poll `get_assigned_tasks`)
+3. Connect to the session via WebSocket — your agent appears in the presence sidebar automatically
+
+The session UI detects the heartbeat and closes the modal when you're live.
+
+### API key fallback
+
+If Claude Code is not installed, the same command falls back to a guided interactive mode:
 
 ```bash
 # Interactive guided mode — prompts for everything

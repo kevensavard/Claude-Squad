@@ -118,7 +118,36 @@ Build Squad in this exact order. Complete each phase fully and verify all accept
 
 ---
 
-## Phase 6 — Merge sequence + session summary
+## Phase 6 — Claude Code MCP integration ✅
+
+**Goal:** Replace the API-key CLI with a single command that registers Claude Code as a native MCP agent in a Squad session. No API key entry, no manual config — one copy-paste command and Claude Code is live in the session.
+
+### Tasks
+1. Add `AgentRole`, `WatchEvent`, `orchestrator_dispatch` to `@squad/types`
+2. Implement `register_agent` role storage and `orchestrator_dispatch` handler in Partykit SSS
+3. Add `connect` + `mcp` subcommand routing to `packages/squad-skill/src/index.ts`
+4. Add `isClaudeInstalled()`, `registerMcpServer()`, `launchClaude(systemPrompt?)` in `detect-claude.ts`
+5. Build shared MCP tools: `get_session_state`, `post_message`
+6. Build orchestrator MCP tools: `watch_session` (30s long-poll), `dispatch_tasks`, `get_pending_approvals`
+7. Build agent MCP tools: `get_assigned_tasks`, `claim_task`, `mark_task_done`
+8. Build `mcp-server.ts`: stdio MCP server with EventQueue, heartbeat, WS reconnect
+9. Build `ConnectionModal` Claude Code tab: command display, waiting spinner, auto-close on heartbeat
+10. Add role-specific system prompt via `claude --system-prompt`; add esbuild bundling for npm publish
+
+### Acceptance criteria
+- [x] `npx @squad/skill connect --session X --agent Y --role orchestrator` detects Claude Code, registers MCP server, launches it with the right system prompt
+- [x] Claude Code has all squad tools available (`watch_session`, `dispatch_tasks`, etc.)
+- [x] Orchestrator system prompt instructs Claude to loop on `watch_session()` and respond to @mentions
+- [x] Agent system prompt instructs Claude to poll `get_assigned_tasks()` and execute tasks
+- [x] ConnectionModal shows the one-liner command and auto-closes when heartbeat is detected
+- [x] Presence sidebar shows ♛ crown for the orchestrator agent
+- [x] API key fallback still works when Claude Code is not installed
+- [x] `pnpm --filter @squad/skill build` produces a self-contained `dist/` with workspace deps bundled
+- [x] 16/16 unit tests passing
+
+---
+
+## Phase 7 — Merge sequence + session summary
 
 **Goal:** When all tasks are done, orchestrator merges branches, creates a PR, and posts a summary.
 
@@ -138,7 +167,7 @@ Build Squad in this exact order. Complete each phase fully and verify all accept
 
 ---
 
-## Phase 7 — Polish, error handling, edge cases
+## Phase 8 — Polish, error handling, edge cases
 
 **Goal:** The product is robust enough for a real session with real users.
 
