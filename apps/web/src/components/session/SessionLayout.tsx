@@ -30,6 +30,8 @@ export function SessionLayout({
   const [showConnectionModal, setShowConnectionModal] = useState(false)
   const { apiKey, isConnected, setKey } = useAgentKey()
 
+  const role: 'orchestrator' | 'agent' = session.host_user_id === currentUserId ? 'orchestrator' : 'agent'
+
   const availableAgentIds = members.map((m) => m.agent_id)
 
   async function handleSend(content: string) {
@@ -140,6 +142,8 @@ export function SessionLayout({
         <ConnectionModal
           agentId={currentMember.agent_id}
           sessionId={session.id}
+          role={role}
+          agentStatuses={agents}
           onKeySubmit={setKey}
           onClose={() => setShowConnectionModal(false)}
         />
