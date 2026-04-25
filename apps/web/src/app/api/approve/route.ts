@@ -5,6 +5,7 @@ import type { Task } from '@squad/types'
 interface ApproveBody {
   sessionId: string
   proposalMessageId: string
+  modifiedTasks?: ProposalTask[]
 }
 
 interface ProposalTask {
@@ -93,8 +94,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid proposal message' }, { status: 400 })
   }
 
-  const proposal = proposalMsg.metadata as ProposalCard
-  const tasks: Task[] = proposal.tasks.map(proposalTaskToTask)
+  const tasks: Task[] = (body.modifiedTasks && body.modifiedTasks.length > 0)
+    ? body.modifiedTasks.map(proposalTaskToTask)
+    : (proposalMsg.metadata as ProposalCard).tasks.map(proposalTaskToTask)
 
   if (tasks.length === 0) {
     return NextResponse.json({ error: 'Proposal contains no tasks' }, { status: 400 })
