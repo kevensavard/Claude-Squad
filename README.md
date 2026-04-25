@@ -41,10 +41,13 @@ The more people in a session, the more parallel work gets done — and the cheap
 - **Shared token cost** — each teammate's agent uses their own API key; big projects get cheaper the more people join
 - **Multi-agent group chat** — @mention any connected agent; it replies in the shared thread
 - **Task dispatch** — describe a build goal; the orchestrator splits it into tasks and assigns them
-- **Parallel execution** — each agent works on its own branch simultaneously, no waiting
-- **GitHub integration** — agents create branches, commit code, and open PRs automatically
+- **Parallel execution** — agents run all their independent tasks concurrently; tasks with `dependsOn` wait for their dependencies before starting
+- **Proposal editing** — host can modify task titles, descriptions, and agent assignments inline before approving
+- **Auto merge + PR** — when a build completes, all agent branches are merged automatically and a GitHub PR is created
+- **Session summary** — after each session, a summary page shows the full message history and per-user token cost breakdown
+- **GitHub integration** — agents create branches, commit code, and push automatically
 - **Token metering** — per-agent token budgets displayed in real time in the presence sidebar
-- **squad CLI** — connect Claude Code (via MCP) or any Claude instance (via API key) to a session with one command
+- **`claude-squad-skill` CLI** — connect Claude Code (via MCP) or any Claude instance (via API key) to a session with one command; available on npm
 - **Invite flow** — share a session link; teammates join with their GitHub account
 - **Fully self-hosted** — Vercel + Supabase + Partykit, all free-tier compatible
 
@@ -91,8 +94,7 @@ The more people in a session, the more parallel work gets done — and the cheap
 |---|---|
 | `apps/web` | Next.js web app — the UI everyone uses |
 | `apps/party` | Partykit Session State Server |
-| `apps/docs` | Nextra documentation site |
-| `packages/squad-skill` | CLI agents run to connect to sessions |
+| `packages/squad-skill` | Published as [`claude-squad-skill`](https://www.npmjs.com/package/claude-squad-skill) on npm — CLI agents run to connect to sessions |
 | `packages/agent-runner` | Core agent loop: task execution, commits, PRs |
 | `packages/types` | Shared TypeScript types across all packages |
 
@@ -255,7 +257,7 @@ cd apps/party && npx partykit dev   # starts SSS at localhost:1999
 If you have [Claude Code](https://claude.ai/code) installed, the session UI shows a one-line command. Copy it and run it in your terminal:
 
 ```bash
-npx @squad/skill connect \
+npx claude-squad-skill connect \
   --session <session-id> \
   --agent <your-agent-id> \
   --role orchestrator   # or: agent
@@ -274,10 +276,10 @@ If Claude Code is not installed, the same command falls back to a guided interac
 
 ```bash
 # Interactive guided mode — prompts for everything
-npx @squad/skill
+npx claude-squad-skill
 
 # Or with explicit flags
-npx @squad/skill \
+npx claude-squad-skill \
   --session abc123 \
   --agent claude-u1 \
   --key sk-ant-your-api-key
@@ -295,22 +297,11 @@ Once connected, your agent appears in the presence sidebar. Teammates can @menti
 ## How a Build Session Works
 
 1. **Describe the goal** — someone types a message describing what to build
-2. **Orchestrator plans** — Claude Squad breaks the goal into parallel tasks and assigns them to connected agents
-3. **Agents execute** — each agent works on its assigned task: reads code, writes files, runs tests, commits to a branch
-4. **Review proposals** — the agent posts a proposal card in the chat; a human clicks **Approve** to trigger the PR
-5. **Merge** — the PR is opened on GitHub; merge as usual
-
----
-
-## Docs
-
-Full reference documentation is in `apps/docs/` — a Nextra docs site you can deploy to Vercel separately:
-
-```bash
-cd apps/docs && pnpm dev   # localhost:3001
-```
-
-Or deploy it to Vercel (same process as the web app, root directory = `apps/docs`).
+2. **Orchestrator plans** — Claude Squad breaks the goal into parallel tasks and assigns them to connected agents; a proposal card appears in the chat
+3. **Review the proposal** — the host can click **Modify** to edit task titles, descriptions, or agent assignments inline, then click **Approve & Build**
+4. **Agents execute in parallel** — each agent starts its tasks concurrently; tasks with dependencies wait for their prerequisites automatically
+5. **Merge sequence runs** — when all tasks are done, agent branches are merged into a `squad/{session}` branch and a GitHub PR is opened automatically
+6. **Build summary** — a summary card appears in the chat with the PR link and per-user token cost; a full session summary page is available at `/session/{id}/summary`
 
 ---
 
