@@ -41,7 +41,7 @@ describe('ConnectionModal', () => {
 
   it('shows session-specific CLI command on squad-skill tab', () => {
     render(<ConnectionModal {...defaultProps} />)
-    fireEvent.click(screen.getByText('Local Claude Code (squad-skill)'))
-    expect(screen.getByText(/npx @squad\/skill connect --agent claude-u1 --session test-session-123/)).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Local Claude Code'))
+    expect(screen.getByText(/npx claude-squad-skill connect --session test-session-123 --agent claude-u1/)).toBeInTheDocument()
   })
 })
