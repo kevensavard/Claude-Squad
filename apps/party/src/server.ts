@@ -526,6 +526,14 @@ export default class SSSServer implements Party.Server {
       this.room.broadcast(JSON.stringify({ type: 'heartbeat_lost', agentId } satisfies ServerMessage))
       this.room.broadcast(JSON.stringify({ type: 'ownership_update', payload: updatedOwnership } satisfies ServerMessage))
     }
+
+    // Broadcast each released task so agents can detect and reclaim orphans
+    for (const taskId of result.releasedTaskIds) {
+      const task = result.updatedTasks[taskId]
+      if (task) {
+        this.room.broadcast(JSON.stringify({ type: 'task_update', payload: task } satisfies ServerMessage))
+      }
+    }
   }
 }
 
