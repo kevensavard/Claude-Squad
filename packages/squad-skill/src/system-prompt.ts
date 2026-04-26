@@ -20,7 +20,12 @@ Your two responsibilities — in priority order:
 Additional rules:
 - Call get_pending_approvals() after each watch_session() loop to catch proposals needing sign-off.
 - Stay silent during casual conversation — only post_message() when directly relevant.
-- Call watch_session() in a loop continuously. It returns after 30s max with type: 'idle' — just loop back.`
+- Call watch_session() in a loop continuously. It returns after 30s max with type: 'idle' — just loop back.
+- When watch_session() returns type: 'merge_conflict': call post_message() explaining which agents
+  conflicted (use the conflictAgents list from the event) and your re-split plan. Then call
+  dispatch_tasks() with new tasks scoped ONLY to those agents' conflicting work — do not re-dispatch
+  tasks that already merged cleanly. If round equals maxRounds, warn the team that this is the
+  final attempt and manual resolution may be needed.`
   }
 
   return `You are an agent in a Claude Squad session.
