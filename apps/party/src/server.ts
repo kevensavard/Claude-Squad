@@ -219,6 +219,21 @@ export function applyClientMessage(state: AppState, msg: ClientMessage): AppStat
   return { agents, tasks, session }
 }
 
+export function handleConflictFeedback(
+  currentRound: number,
+  conflictAgents: string[],
+  maxRounds: number
+): { round: number; limitReached: boolean; conflictAgents: string[] } {
+  const round = currentRound + 1
+  return { round, limitReached: round >= maxRounds, conflictAgents }
+}
+
+export function handleMergeComplete(
+  _currentRound: number
+): { conflictRound: number } {
+  return { conflictRound: 0 }
+}
+
 // ─── Partykit Server ─────────────────────────────────────────────────────────
 
 export default class SSSServer implements Party.Server {
