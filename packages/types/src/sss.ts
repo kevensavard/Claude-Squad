@@ -97,4 +97,5 @@ export type WatchEvent =
   | { type: 'mention'; from: string; content: string; requestId: string }
   | { type: 'build_goal'; from: string; content: string }
   | { type: 'approval_needed'; proposalId: string; agentId: string; summary: string }
+  | { type: 'merge_conflict'; conflictAgents: string[]; round: number; maxRounds: number }
   | { type: 'idle' }
