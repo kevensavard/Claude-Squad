@@ -93,12 +93,34 @@ export async function POST(req: NextRequest) {
           conflictAgents = result.conflictAgents
 
           if (conflictAgents.length > 0) {
-            await adminSupabase.from('messages').insert({
-              session_id: sessionId,
-              sender_type: 'system',
-              content: `Merge conflicts in agents: ${conflictAgents.join(', ')}. Manual resolution required.`,
-              metadata: { type: 'merge_conflict', conflictAgents },
-            })
+            const sssUrl = process.env.NEXT_PUBLIC_PARTYKIT_HOST
+            if (sssUrl) {
+              try {
+                const feedbackRes = await fetch(
+                  `${sssUrl}/parties/main/${sessionId}/conflict-feedback`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conflictAgents }),
+                  }
+                )
+                const feedbackData = await feedbackRes.json() as { round: number; limitReached: boolean }
+                if (feedbackData.limitReached) {
+                  // SSS already set session to done and broadcast merge_failed
+                  return NextResponse.json({ ok: true, prUrl, limitReached: true })
+                }
+              } catch {
+                // Non-fatal — fall back to legacy message
+                await adminSupabase.from('messages').insert({
+                  session_id: sessionId,
+                  sender_type: 'system',
+                  content: `Merge conflicts in agents: ${conflictAgents.join(', ')}. Orchestrator notified.`,
+                  metadata: { type: 'merge_conflict', conflictAgents },
+                })
+              }
+            }
+            // Session stays 'building' — orchestrator will re-dispatch
+            return NextResponse.json({ ok: true, prUrl, conflictAgents })
           }
         } catch (err) {
           await adminSupabase.from('messages').insert({
