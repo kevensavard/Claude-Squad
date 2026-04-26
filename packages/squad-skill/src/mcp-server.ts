@@ -159,6 +159,15 @@ export async function startMcpServer(opts: McpServerOptions): Promise<void> {
       }
     }
 
+    if (msg.type === 'merge_conflict') {
+      eventQueue.push({
+        type: 'merge_conflict',
+        conflictAgents: msg['conflictAgents'] as string[],
+        round: msg['round'] as number,
+        maxRounds: msg['maxRounds'] as number,
+      })
+    }
+
     if (role === 'orchestrator' && msg.type === 'route_to_agent') {
       const agentIdTarget = msg['agentId'] as string
       if (agentIdTarget === agentId) {

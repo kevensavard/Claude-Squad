@@ -13,6 +13,8 @@ export type ServerMessage =
   | { type: 'build_complete'; summary: BuildSummary }
   | { type: 'agent_blocked'; agentId: string; taskId: string; reason: string }
   | { type: 'heartbeat_lost'; agentId: string }
+  | { type: 'merge_conflict'; conflictAgents: string[]; round: number; maxRounds: number }
+  | { type: 'merge_failed'; reason: 'max_rounds_reached'; conflictAgents: string[] }
 
 export type ClientMessage =
   | { type: 'register_agent'; agentId: string; userId: string; displayName: string; role?: AgentRole }
