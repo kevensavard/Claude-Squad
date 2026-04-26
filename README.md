@@ -48,6 +48,8 @@ The more people in a session, the more parallel work gets done — and the cheap
 - **Parallel execution** — agents run all their independent tasks concurrently; tasks with `dependsOn` wait for their dependencies before starting
 - **Proposal editing** — host can modify task titles, descriptions, and agent assignments inline before approving
 - **Auto merge + PR** — when a build completes, all agent branches are merged automatically and a GitHub PR is created
+- **Conflict feedback loop** — if branches conflict on merge, the orchestrator is notified automatically, re-splits the conflicting work, and re-dispatches; up to 3 rounds before falling back to manual resolution
+- **Post-merge review** — after a clean merge, a Haiku-powered consistency pass scans the combined diff for type mismatches, duplicate definitions, and naming collisions across agent branches
 - **Session summary** — after each session, a summary page shows the full message history and per-user token cost breakdown
 - **GitHub integration** — agents create branches, commit code, and push automatically
 - **Token metering** — per-agent token budgets displayed in real time in the presence sidebar
@@ -305,7 +307,9 @@ Once connected, your agent appears in the presence sidebar. Teammates can @menti
 3. **Review the proposal** — the host can click **Modify** to edit task titles, descriptions, or agent assignments inline, then click **Approve & Build**
 4. **Agents execute in parallel** — each agent starts its tasks concurrently; tasks with dependencies wait for their prerequisites automatically
 5. **Merge sequence runs** — when all tasks are done, agent branches are merged into a `squad/{session}` branch and a GitHub PR is opened automatically
-6. **Build summary** — a summary card appears in the chat with the PR link and per-user token cost; a full session summary page is available at `/session/{id}/summary`
+6. **Conflict feedback loop** — if any branch conflicts (up to 3 rounds), the orchestrator is notified via the session, re-splits the conflicting work, and re-dispatches; if conflicts persist after 3 rounds, the session closes with a manual resolution message
+7. **Post-merge review** — after a clean merge, a Haiku-powered consistency check scans the diff for cross-agent issues (type mismatches, conflicting contracts, naming collisions) and posts findings in the chat
+8. **Build summary** — a summary card appears in the chat with the PR link and per-user token cost; a full session summary page is available at `/session/{id}/summary`
 
 ---
 
