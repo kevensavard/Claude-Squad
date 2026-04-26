@@ -376,6 +376,12 @@ export default class SSSServer implements Party.Server {
     if (resource === 'dispatch') {
       return this.handleDispatch(req)
     }
+    if (resource === 'conflict-feedback') {
+      return this.handleConflictFeedbackRequest(req)
+    }
+    if (resource === 'merge-complete') {
+      return this.handleMergeCompleteRequest()
+    }
     if (resource === 'health') {
       return Response.json({ ok: true })
     }
@@ -484,6 +490,54 @@ export default class SSSServer implements Party.Server {
       payload: updatedOwnership,
     } satisfies ServerMessage))
 
+    return Response.json({ ok: true })
+  }
+
+  private async handleConflictFeedbackRequest(req: Party.Request): Promise<Response> {
+    if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 })
+
+    let body: { conflictAgents: string[] }
+    try {
+      body = await req.json() as { conflictAgents: string[] }
+    } catch {
+      return Response.json({ error: 'invalid body' }, { status: 400 })
+    }
+
+    const MAX_ROUNDS = 3
+    const currentRound = (await this.room.storage.get<number>('conflictRound')) ?? 0
+    const result = handleConflictFeedback(currentRound, body.conflictAgents, MAX_ROUNDS)
+
+    await this.room.storage.put('conflictRound', result.round)
+
+    if (!result.limitReached) {
+      this.room.broadcast(JSON.stringify({
+        type: 'merge_conflict',
+        conflictAgents: result.conflictAgents,
+        round: result.round,
+        maxRounds: MAX_ROUNDS,
+      } satisfies ServerMessage))
+      return Response.json({ round: result.round, limitReached: false })
+    }
+
+    // Round limit reached — close session
+    const session = await this.room.storage.get<SessionState>('session')
+    if (session && session.status !== 'done') {
+      const updated = { ...session, status: 'done' as const }
+      await this.room.storage.put('session', updated)
+      this.room.broadcast(JSON.stringify({ type: 'session_state', payload: updated } satisfies ServerMessage))
+    }
+    this.room.broadcast(JSON.stringify({
+      type: 'merge_failed',
+      reason: 'max_rounds_reached',
+      conflictAgents: result.conflictAgents,
+    } satisfies ServerMessage))
+    return Response.json({ round: result.round, limitReached: true })
+  }
+
+  private async handleMergeCompleteRequest(): Promise<Response> {
+    const current = (await this.room.storage.get<number>('conflictRound')) ?? 0
+    const result = handleMergeComplete(current)
+    await this.room.storage.put('conflictRound', result.conflictRound)
     return Response.json({ ok: true })
   }
 
